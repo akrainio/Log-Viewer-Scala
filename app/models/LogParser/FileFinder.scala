@@ -2,14 +2,13 @@ package models.LogParser
 
 import java.io.{File, RandomAccessFile}
 import java.text.SimpleDateFormat
-import java.util.Comparator
 
 /**
   * Created by akrainio on 10/1/17.
   */
-class FileFinder(val file: File, protected override val pattern: String) extends Finder[Line, Long] {
+class FileFinder(val infile: File, protected override val pattern: String) extends Finder[Line, Long] {
 
-  private val randomAccessFile: RandomAccessFile = new RandomAccessFile(file, "r")
+  private val file: RandomAccessFile = new RandomAccessFile(infile, "r")
 
   private val format: SimpleDateFormat = new SimpleDateFormat(pattern)
 
@@ -21,11 +20,13 @@ class FileFinder(val file: File, protected override val pattern: String) extends
 
   override def getFragment(startStamp: Option[String], endStamp: Option[String]): (Int, Int) = ???
 
-  protected override def getLayer(index: Long): Line = ???
+  protected override def getLayer(index: Long): Line = {
 
-  protected override def getStamp(layer: Line): String = ???
+  }
 
-  protected override def getStampRange: (String, String) = ???
+  protected override def getStamp(line: Line): String = line.stamp
+
+  protected override def getStampRange: (String, String) = (getStamp(first), getStamp(last))
 
   protected override def getIndex(stamp: String): Long = ???
 
