@@ -1,7 +1,7 @@
 package models.LogParser
 
 import java.io.{File, RandomAccessFile}
-import java.text.SimpleDateFormat
+import java.text.{ParseException, ParsePosition, SimpleDateFormat}
 
 /**
   * Created by akrainio on 10/1/17.
@@ -20,11 +20,31 @@ class FileFinder(val infile: File, protected override val pattern: String) exten
 
   override def getFragment(startStamp: Option[String], endStamp: Option[String]): (Int, Int) = ???
 
-  protected override def getLayer(index: Long): Line = {
-
+  protected override def getLayer(index: Long, backtrack: Option[Boolean]): Line = {
+    def findLineStart(index: Long): Long = {
+      file.seek(index)
+      if (index <= 0) 0
+      else if (file.readChar == '\n') index + 1
+      else findLineStart(index - 1)
+    }
+    val startIndex = findLineStart(index)
+    file.seek(startIndex)
+    val line = file.readLine()
+    try {
+      new Line(startIndex, line.length + 1, line, format)
+    } catch {
+      case e: ParseException => backtrack match {
+        case Some(true) => if (startIndex == 0) {
+          throw new Exception("Nowhere to backtrack to")
+        } else {
+          getLayer(startIndex - 2, Option(true))
+        }
+        case _ => getLayer(line.length + 1)
+      }
+    }
   }
 
-  protected override def getStamp(line: Line): String = line.stamp
+  protected override def getStamp(layer: Line): String = layer.stamp
 
   protected override def getStampRange: (String, String) = (getStamp(first), getStamp(last))
 
@@ -36,8 +56,11 @@ class FileFinder(val infile: File, protected override val pattern: String) exten
 
 }
 
-class Line(line: String) {
-  val startIndex: Long = ???
-  val endIndex: Long = ???
-  val stamp: String = ???
+class Line(private val startIndex: Long, private val endIndex: Long, line: String, format: SimpleDateFormat) {
+  val stamp: String = {
+    val parsePosition = new ParsePosition(0)
+    format.parse(line, parsePosition)
+    line.substring(0, parsePosition.getIndex)
+  }
 }
+

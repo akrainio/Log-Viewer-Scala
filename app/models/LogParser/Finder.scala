@@ -20,7 +20,7 @@ abstract class Finder[L, R] {
   def getFragment(startStamp: Option[String], endStamp: Option[String]): (R, R)
 
   // Get the layer at given index
-  protected def getLayer(index: R): L
+  protected def getLayer(index: R, backtrack: Option[Boolean]): L
 
   // Get the stamp at given index
   protected def getStamp(layer: L): String
