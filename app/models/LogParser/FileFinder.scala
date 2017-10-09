@@ -20,7 +20,7 @@ class FileFinder(val infile: File, protected override val pattern: String) exten
 
   override def getFragment(startStamp: Option[String], endStamp: Option[String]): (Int, Int) = ???
 
-  protected override def getLayer(index: Long, backtrack: Boolean = false): Line = {
+  override def getLayer(index: Long, backtrack: Boolean = false): Line = {
     def findLineStart(index: Long): Long = {
       file.seek(index)
       if (index <= 0) 0
@@ -37,7 +37,7 @@ class FileFinder(val infile: File, protected override val pattern: String) exten
         if (startIndex == 0) {
           throw new Exception("Nowhere to backtrack to")
         } else {
-          getLayer(startIndex - 2, true)
+          getLayer(startIndex - 2, backtrack = true)
         }
       } else getLayer(line.length + 1)
     }
