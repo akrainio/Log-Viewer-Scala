@@ -24,6 +24,14 @@ class SearchableFileTest {
   def stampedLineTest(): Unit = {
     assertEquals(true, searchableFile.isStamped(1000))
   }
+
+  @Test
+  def findTest(): Unit = {
+    val searcher = new Searcher[Long, Long](searchableFile)
+    val loc = searcher.find(searchableFile.stampToLong("2017-04-19T19:03:10.656Z").get).get
+    randomAccessFile.seek(searchableFile.adjustedIndex(loc))
+    println(randomAccessFile.readLine)
+  }
 }
 
 object SearchableFileTest {

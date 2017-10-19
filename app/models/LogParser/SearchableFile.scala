@@ -12,7 +12,7 @@ class SearchableFile(val infile: File, val pattern: String) extends Searchable[L
   private val size = file.length()
 
   override val first: Long = adjustedIndex(0)
-  override val last: Long = adjustedIndex(size - 1)
+  override val last: Long = adjustedIndex(size - 2)
 
   override def mid(idx1: Long, idx2: Long): Long = {
     val idx1End = findLineEnd(idx1)
@@ -22,7 +22,7 @@ class SearchableFile(val infile: File, val pattern: String) extends Searchable[L
 
   override def get(idx: Long): Long = {
     file.seek(adjustedIndex(idx))
-    format.parse(file.readLine.trim).getTime
+    stampToLong(file.readLine).get
   }
 
   def adjustedIndex(idx: Long, backtrack: Boolean = true): Long = {
@@ -71,17 +71,19 @@ class SearchableFile(val infile: File, val pattern: String) extends Searchable[L
 
   final def isStamped(idx: Long): Boolean = {
     val lineStart = findLineStart(idx)
-    try {
-      file.seek(lineStart)
-      format.parse(file.readLine.trim)
-      true
-    } catch {
-      case _: ParseException => false
+    file.seek(lineStart)
+    val line = file.readLine
+    if (line == null) false
+    else {
+      stampToLong(line) match {
+        case Some(_) => true
+        case None => false
+      }
     }
   }
 
   private final def stampedLineForw(idx: Long): Option[Long] = {
-    def nextLine(idx: Long) = findLineEnd(idx) + 1
+    def nextLine(idx: Long) = findLineEnd(idx) + 2
     def rec(idx: Long): Option[Long] = {
       if (idx >= size) None
       else if (isStamped(idx)) Some(idx)
@@ -91,7 +93,7 @@ class SearchableFile(val infile: File, val pattern: String) extends Searchable[L
   }
 
   private final def stampedLineBack(idx: Long): Option[Long] = {
-    def prevLine(idx: Long) = findLineStart(idx) - 1
+    def prevLine(idx: Long) = findLineStart(idx) - 2
     def rec(idx: Long): Option[Long] = {
       if (idx < 0) None
       else if (isStamped(idx)) Some(idx)
@@ -99,4 +101,13 @@ class SearchableFile(val infile: File, val pattern: String) extends Searchable[L
     }
     rec(prevLine(idx))
   }
+
+  final def stampToLong(stamp: String): Option[Long] = {
+    try {
+      Some(format.parse(stamp.trim).getTime)
+    } catch {
+      case _: ParseException => None
+    }
+  }
+
 }
